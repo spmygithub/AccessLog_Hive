@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/AccessLog_Hive.iml" filepath="$PROJECT_DIR$/AccessLog_Hive.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DateTransform.iml" filepath="$PROJECT_DIR$/DateTransform.iml" />
+      <module fileurl="file://$PROJECT_DIR$/RemoveQuotation.iml" filepath="$PROJECT_DIR$/RemoveQuotation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TruncationRequestAddr.iml" filepath="$PROJECT_DIR$/TruncationRequestAddr.iml" />
+    </modules>
+  </component>
+</project>

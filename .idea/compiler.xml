@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="AccessLog_Hive" />
+        <module name="DateTransform" />
+        <module name="RemoveQuotation" />
+        <module name="TruncationMainAdd" />
+        <module name="TruncationRequestAddr" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="AccessLog_Hive" target="1.8" />
+      <module name="DateTransform" target="1.8" />
+      <module name="RemoveQuotation" target="1.8" />
+      <module name="TruncationRequestAddr" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
