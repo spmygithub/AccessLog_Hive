@@ -1,0 +1,70 @@
+##HQL脚本
+--原始日志格式：
+--	"27.38.5.159"	"-"     "31/Aug/2015:00:04:37 +0800"  
+--	"GET /course/view.php?id=27 HTTP/1.1" "303"   "440"      -       
+--	"http://www.baidu.com/user.php?act=mycourse"	"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36"  
+--	"-"	"learn.baidu.com"
+
+--1、创建hive源表，存放原始日志数据
+create table if not exists accesslog_source(
+remote_addr string,
+remote_user string,
+time_local string,
+request string,
+status string,
+body_bytes_sent string,
+requset_body string,
+http_referer string,
+http_user_agent string,
+http_x_forwarded_for string,
+host string
+)
+row format serde 'org.apache.hadoop.hive.serde2.RegexSerDe'
+WITH SERDEPROPERTIES (
+  "input.regex" = "(\"[^ ]*\") (\"[-|^ ]*\") (\"[^\"]*\") (\"[^\"]*\") (\"[0-9]*\") (\"[0-9]*\") ([-|^ ]*) (\"[^ ]*\") (\"[^\"]*\") (\"[-|^ ]*\") (\"[^ ]*\")"
+)
+STORED AS TEXTFILE;
+
+
+--2、加载日志数据到hive源表中
+load data local inpath '/bigdatatest/hivetest/dataset/BFLog.txt' overwrite
+into table accesslog_source;
+
+--3、创建一个新表，用来存储需要的字段
+--分析需求，只需要：用户的IP地址、时间、请求地址、refer地址
+--这里采用parquet存储格式以节约存储空间
+create table if not exists accesslog_cleaned(
+remote_addr string,
+time_local string,
+request string,
+http_referer string
+)
+row format delimited fields terminated by '\t'
+stored as parquet tblproperties("parquet.compress"="SNAPPY");
+
+--4、将写好的UDF jar包添加到Hive中 
+add jar /bigdatatest/hivetest/jars/AccessLog/RemoveQuotation-2.0.jar;
+add jar /bigdatatest/hivetest/jars/AccessLog/TruncationRequestAddr-2.0.jar;
+add jar /bigdatatest/hivetest/jars/AccessLog/TruncationMainAdd-2.0.jar;
+add jar /bigdatatest/hivetest/jars/AccessLog/DateTransform-2.0.jar;
+
+--5、将写好的UDF添加到函数中并且自定义名称
+--此种方式创建的函数当退出hive shell时将失效
+--永久添加UDF的方法：配置hive-site.xml文件中的hive.aux.jars.path(辅助jar路径)属性，属性值为jar包的绝对路径
+	--(1)函数功能：去除数据字段两端的双引号
+	create temporary function rq as "cn.njupt.bigdata.hive.RemoveQuotation";
+	--(2)函数功能：从 "GET /course/view.php?id=27 HTTP/1.1" 中获取请求地址
+	create temporary function tr as "cn.njupt.bigdata.hive.TruncationRequestAddr";
+	--(3)函数功能：提取主地址，即"http://www.ibeifeng.com"
+	create temporary function tm as "cn.njupt.bigdata.hive.TruncationMainAdd";
+	--(4)函数功能：转换日期格式
+	create temporary function dt as "cn.njupt.bigdata.hive.DateTransform";
+
+--6、将清洗后的数据加载到新表中
+insert overwrite table accesslog_cleaned
+select rq(remote_addr),dt(rq(time_local)),
+tr(rq(request)),tm(rq(http_referer))
+from accesslog_source;
+
+--7、检查数据是否处理成功
+select * from accesslog_cleaned limit 10;
